@@ -19,6 +19,7 @@ The frontend is set up (see Commands); the backend folder is still empty. Update
 - **Broker connections:** each broker is an adapter behind our own `BrokerClient` interface (see below)
   - **IBKR:** official IBKR TWS API Java client (`EClient`/`EWrapper`) talking to TWS or IB Gateway; the adapter turns callbacks into `CompletableFuture`s and handles reconnects
   - **eToro:** eToro public REST API (API key + user key, separate demo/virtual and real environments) called via `RestClient`. Check the current eToro API docs for endpoints, auth headers, rate limits and order semantics before implementing — don't guess them
+  - **....** any broker can be added later without any problems / major work
 - **AI model:** a free model (e.g. a local model via Ollama, or a free-tier hosted API) called via Spring AI or `RestClient`. Keep it behind one interface so the model can be swapped
 - **Database:** PostgreSQL; Flyway migrations; Testcontainers (or H2) for tests
 - **Frontend:** React + Vite + TypeScript
