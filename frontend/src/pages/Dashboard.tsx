@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { api } from '../api';
+import type { PageProps } from '../accounts';
 import { money, num, pnlClass, time } from '../format';
 import { usePolling } from '../usePolling';
 
-export function Dashboard() {
+export function Dashboard({ account }: PageProps) {
   const status = usePolling(api.getStatus, 10_000);
-  const account = usePolling(api.getAccount, 10_000);
-  const positions = usePolling(api.getPositions, 10_000);
+  const loadSummary = useCallback(() => api.getAccount(account.accountId), [account.accountId]);
+  const summary = usePolling(loadSummary, 10_000);
+  const loadPositions = useCallback(() => api.getPositions(account.accountId), [account.accountId]);
+  const positions = usePolling(loadPositions, 10_000);
 
   const s = status.data;
-  const a = account.data;
-  const error = status.error ?? account.error ?? positions.error;
+  const a = summary.data;
+  const error = status.error ?? summary.error ?? positions.error;
 
   return (
     <>
@@ -19,7 +22,7 @@ export function Dashboard() {
       {s && <KillSwitch enabled={s.tradingEnabled} onChanged={status.reload} />}
 
       <section className="cards">
-        <Card label="Net liquidation" value={money(a?.netLiquidation, a?.currency)} />
+        <Card label="Equity" value={money(a?.equity, a?.currency)} />
         <Card label="Cash" value={money(a?.cash, a?.currency)} />
         <Card label="Today's P&L" value={money(a?.dailyPnl, a?.currency)} className={pnlClass(a?.dailyPnl)} />
         <Card label="Unrealized P&L" value={money(a?.unrealizedPnl, a?.currency)} className={pnlClass(a?.unrealizedPnl)} />
@@ -27,8 +30,8 @@ export function Dashboard() {
 
       {s && (
         <p className="muted">
-          IBKR: {s.brokerConnected ? 'connected' : 'disconnected'} · Market: {s.marketOpen ? 'open' : 'closed'} ·
-          Last AI run: {time(s.lastRunAt)}
+          {account.displayName} ({account.broker}): {s.brokerConnected ? 'connected' : 'disconnected'} ·
+          Market: {s.marketOpen ? 'open' : 'closed'} · Last AI run: {time(s.lastRunAt)}
         </p>
       )}
 
@@ -37,23 +40,27 @@ export function Dashboard() {
         <table>
           <thead>
             <tr>
-              <th>Symbol</th><th className="r">Qty</th><th className="r">Avg cost</th>
+              <th>Symbol</th><th>Side</th><th className="r">Qty</th><th className="r">Avg price</th>
               <th className="r">Price</th><th className="r">Value</th><th className="r">Unrealized P&L</th>
             </tr>
           </thead>
           <tbody>
             {positions.data?.map((p) => (
-              <tr key={p.symbol}>
-                <td><b>{p.symbol}</b></td>
+              <tr key={`${p.symbol}-${p.side}`}>
+                <td>
+                  <b>{p.symbol}</b>
+                  <div className="muted small">{p.assetClass}{p.leverage ? ` · x${p.leverage}` : ''}</div>
+                </td>
+                <td><span className={`tag ${p.side === 'LONG' ? 'buy' : 'sell'}`}>{p.side}</span></td>
                 <td className="r">{num(p.quantity)}</td>
-                <td className="r">{money(p.avgCost)}</td>
-                <td className="r">{money(p.marketPrice)}</td>
-                <td className="r">{money(p.marketValue)}</td>
-                <td className={`r ${pnlClass(p.unrealizedPnl)}`}>{money(p.unrealizedPnl)}</td>
+                <td className="r">{money(p.avgPrice, p.currency)}</td>
+                <td className="r">{money(p.marketPrice, p.currency)}</td>
+                <td className="r">{money(p.marketValue, p.currency)}</td>
+                <td className={`r ${pnlClass(p.unrealizedPnl)}`}>{money(p.unrealizedPnl, p.currency)}</td>
               </tr>
             ))}
             {positions.data?.length === 0 && (
-              <tr><td colSpan={6} className="muted">No open positions</td></tr>
+              <tr><td colSpan={7} className="muted">No open positions</td></tr>
             )}
           </tbody>
         </table>

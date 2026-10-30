@@ -147,3 +147,30 @@ td.reasoning { min-width: 240px; color: var(--muted); }
   background: var(--bg);
   color: var(--text);
 }
+
+header select {
+  font: inherit;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.switcher { position: relative; }
+.switch-confirm {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 10;
+  width: min(340px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+.switch-confirm.live { border-left: 4px solid var(--neg); }

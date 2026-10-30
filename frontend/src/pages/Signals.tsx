@@ -1,10 +1,11 @@
+import { useCallback } from 'react';
 import { api } from '../api';
-import { num, time } from '../format';
+import type { PageProps } from '../accounts';
+import { size, time } from '../format';
 import { usePolling } from '../usePolling';
 
-const loadSignals = () => api.getSignals(100);
-
-export function Signals() {
+export function Signals({ account }: PageProps) {
+  const loadSignals = useCallback(() => api.getSignals(account.accountId, 100), [account.accountId]);
   const { data, error } = usePolling(loadSignals, 15_000);
 
   return (
@@ -15,7 +16,7 @@ export function Signals() {
         <table>
           <thead>
             <tr>
-              <th>Time</th><th>Symbol</th><th>Action</th><th className="r">Qty</th>
+              <th>Time</th><th>Symbol</th><th>Action</th><th className="r">Size</th>
               <th className="r">Confidence</th><th>Status</th><th>Reasoning</th>
             </tr>
           </thead>
@@ -25,7 +26,7 @@ export function Signals() {
                 <td className="nowrap">{time(s.createdAt)}</td>
                 <td><b>{s.symbol}</b></td>
                 <td><span className={`tag ${s.action.toLowerCase()}`}>{s.action}</span></td>
-                <td className="r">{num(s.quantity)}</td>
+                <td className="r nowrap">{size(s.size, account.baseCurrency)}</td>
                 <td className="r">{Math.round(s.confidence * 100)}%</td>
                 <td>
                   <span className={`tag ${s.status.toLowerCase()}`}>{s.status}</span>

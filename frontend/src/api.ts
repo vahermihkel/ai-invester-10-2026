@@ -1,4 +1,6 @@
-import type { AccountSummary, Order, Position, RiskSettings, Signal, SystemStatus } from './types';
+import type {
+  AccountSummary, BrokerAccount, Order, Position, RiskSettings, Signal, SystemStatus,
+} from './types';
 import * as mock from './mockData';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
@@ -15,14 +17,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.status === 204 ? (undefined as T) : res.json();
 }
 
+const q = (accountId: string) => encodeURIComponent(accountId);
+
+// Only one account is active at a time; pages pass the active accountId explicitly.
 export const api = USE_MOCK
   ? mock.api
   : {
+      getAccounts: () => request<BrokerAccount[]>('/accounts'),
       getStatus: () => request<SystemStatus>('/status'),
-      getAccount: () => request<AccountSummary>('/account'),
-      getPositions: () => request<Position[]>('/positions'),
-      getSignals: (limit = 50) => request<Signal[]>(`/signals?limit=${limit}`),
-      getOrders: (limit = 50) => request<Order[]>(`/orders?limit=${limit}`),
+      // Switch which broker account is traded and shown.
+      setActiveAccount: (accountId: string) =>
+        request<SystemStatus>('/accounts/active', { method: 'PUT', body: JSON.stringify({ accountId }) }),
+      getAccount: (accountId: string) => request<AccountSummary>(`/account?accountId=${q(accountId)}`),
+      getPositions: (accountId: string) => request<Position[]>(`/positions?accountId=${q(accountId)}`),
+      getSignals: (accountId: string, limit = 50) =>
+        request<Signal[]>(`/signals?accountId=${q(accountId)}&limit=${limit}`),
+      getOrders: (accountId: string, limit = 50) =>
+        request<Order[]>(`/orders?accountId=${q(accountId)}&limit=${limit}`),
       getSettings: () => request<RiskSettings>('/settings'),
       saveSettings: (s: RiskSettings) =>
         request<RiskSettings>('/settings', { method: 'PUT', body: JSON.stringify(s) }),
