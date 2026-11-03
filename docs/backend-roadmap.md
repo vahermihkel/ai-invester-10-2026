@@ -15,7 +15,8 @@ What the backend must do, and in which order to build it. Tick items off (`[x]`)
 - [ ] **Account summary and positions** — fetch from the active account; store `account_snapshots` + `position_snapshots` for history (schedule + retention in [brokers.md](brokers.md)).
 - [ ] **History reconciliation/backfill** — per adapter, fill gaps in orders/fills/daily equity from the broker's history source (IBKR Flex Web Service, eToro trade history).
 - [ ] **Order lifecycle** — track each order SUBMITTED → PARTIALLY_FILLED → FILLED / CANCELLED / REJECTED; record fills, including late ones.
-- [ ] **Instrument mapping** — symbol → broker's own ID, cached in `instrument_mappings`.
+- [ ] **External activity** — store orders we didn't send (`source = EXTERNAL`: broker's own app, stop-outs, liquidations) and money movements in `cash_transactions` (deposits, dividends, fees).
+- [ ] **Instrument mapping** — symbol → broker's own ID and trading rules, cached in `instrument_mappings`.
 - [ ] **Reconnect + resync** — reconnect with backoff, reload state from the broker; unknown order outcome = "maybe placed", reconcile first.
 - [ ] **Active account switching** — `ActiveAccountService`, `PUT /api/accounts/active`, rules in [brokers.md](brokers.md).
 
@@ -23,7 +24,7 @@ What the backend must do, and in which order to build it. Tick items off (`[x]`)
 - [ ] **Market data** — prices/history from the broker or a free source behind `MarketDataProvider`.
 - [ ] **Risk engine** — max position value, max order value, max daily loss, max trades/day, allowed symbols, per account. Rejected signals stored with reason.
 - [ ] **Daily P&L / loss tracking** — needed for the max-daily-loss limit.
-- [ ] **Order execution** — signal → `OrderRequest`, units ↔ amount conversion via `BrokerCapabilities`, idempotent (own `clientOrderId`, check open orders/positions first).
+- [ ] **Order execution** — signal → `OrderRequest`, units ↔ amount conversion and netting vs. separate positions via `BrokerCapabilities`, idempotent (own `clientOrderId`, check open orders/positions first).
 - [ ] **Automated trading** — scheduler runs analysis → risk check → execution.
 - [ ] **Manual trading** — endpoint to place/cancel orders by hand (needs adding to [api-contract.md](api-contract.md)). Manual orders also pass the risk engine.
 - [ ] **Scheduler + market hours** — `@Scheduled` runs, market hours and holidays per instrument; no orders while the market is closed.

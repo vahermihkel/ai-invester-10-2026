@@ -28,16 +28,17 @@ The same models are used for IBKR, eToro and any future broker. **Never add brok
 
 - **`TradingMode`** — `PAPER` (any paper/demo/sandbox environment: IBKR paper, eToro demo/virtual) or `LIVE`.
 - **`OrderSize`** — `{ type: 'UNITS' | 'AMOUNT', value }`. `UNITS` = shares/coins (IBKR style), `AMOUNT` = cash in the account currency (eToro style). Used by `Signal.size` (null for HOLD) and `Order.size`.
-- **`BrokerCapabilities`** — `orderTypes` (`MARKET`/`LIMIT`), `sizeTypes`, `fractionalUnits`, `shortSelling`, `leverage`, `assetClasses` (`STOCK`, `ETF`, `CRYPTO`, `FX`, `COMMODITY`, `INDEX`, `OTHER`).
+- **`AssetClass`** — open string type like `BrokerType` (`'STOCK' | 'ETF' | 'CRYPTO' | 'FX' | 'COMMODITY' | 'INDEX' | 'OTHER' | string`); the UI only displays it.
+- **`BrokerCapabilities`** — `orderTypes` (`MARKET`/`LIMIT`), `sizeTypes`, `fractionalUnits`, `shortSelling`, `leverage`, `assetClasses`.
 - **`AccountSummary`** — accountId, broker, `equity` (IBKR net liquidation / eToro equity), cash, dailyPnl, unrealizedPnl, currency.
-- **`Position`** — accountId, broker, symbol, assetClass, `side` (`LONG`/`SHORT`, quantity always positive), quantity (units, may be fractional), avgPrice, marketPrice, marketValue, unrealizedPnl, currency, `leverage` (null = none).
-- **`Order`** — accountId, broker, `clientOrderId` (our idempotency key), `brokerOrderId` (null until the broker acknowledges), symbol, side, size, `orderType` (`MARKET`/`LIMIT`), limitPrice, status, filledQuantity (units), avgFillPrice, currency, signalId.
+- **`Position`** — accountId, broker, symbol, assetClass, `side` (`LONG`/`SHORT`, quantity always positive), quantity (units, may be fractional), avgPrice, marketPrice, marketValue, unrealizedPnl, currency, `leverage` (null = none). Will also get `brokerPositionId` (null on netting brokers) (_planned — not yet in frontend_); `symbol` + `side` is not unique, because some brokers keep several positions per instrument.
+- **`Order`** — accountId, broker, `clientOrderId` (our idempotency key; null for external orders), `brokerOrderId` (null until the broker acknowledges), symbol, side, size, `orderType` (`MARKET`/`LIMIT`, or `OTHER` on external orders), limitPrice, status (`CREATED`, `SUBMITTED`, `PARTIALLY_FILLED`, `FILLED`, `CANCELLED`, `REJECTED`, `UNKNOWN`), filledQuantity (units), avgFillPrice, currency, signalId.
 - **`SystemStatus`** — `activeAccountId`, `tradingEnabled`, `brokerConnected`, `marketOpen`, `lastRunAt`.
 - **`RiskSettings`** — analysisIntervalMinutes, `accounts: { accountId, limits: RiskLimits }[]` (limits in the account's base currency; the UI edits only the active account's entry and sends the rest back unchanged). `RiskLimits` = maxPositionValue, maxOrderValue, maxDailyLoss, maxTradesPerDay, allowedSymbols.
 - **`Signal`** — will also get `aiProvider` (alias), `aiModel` and `fallbackFrom` (_planned — not yet in frontend_).
-- **`Order`** — will also get `source` (AI/MANUAL), `reasoning`, `submittedAt`, `filledAt`, `cancelledAt`, `rejectedAt`, `closeReason`, `commission` (_planned — not yet in frontend_).
+- **`Order`** — will also get `source` (AI/MANUAL/EXTERNAL), `reasoning`, `submittedAt`, `filledAt`, `cancelledAt`, `rejectedAt`, `closeReason`, `commission` (_planned — not yet in frontend_).
 - **`Trade`** (_planned_) — id, accountId, broker, symbol, assetClass, side (LONG/SHORT), status (OPEN/CLOSED), quantity, entryPrice, exitPrice, realizedPnl, realizedPnlPct, successful, currency, openedAt, closedAt, entryReasoning, exitReasoning.
-- **`AccountSnapshot`** (_planned_) — takenAt, reason, currency, totalValue, investedValue, reservedForOrders, freeCash, cash, unrealizedPnl, dailyPnl.
+- **`AccountSnapshot`** (_planned_) — takenAt, reason, source (LIVE/BACKFILL), currency, totalValue, and investedValue, reservedForOrders, freeCash, cash, unrealizedPnl, dailyPnl (each nullable: broker history often has only the total, so charts must leave gaps, not show 0).
 - **`AiProviderType`** — open string type like `BrokerType` (`'OPENAI' | 'GEMINI' | 'GROK' | 'CLAUDE' | 'OLLAMA' | 'OPENAI_COMPATIBLE' | string`); the UI never branches on it.
 - **`BrokerType`** — open string type (`'IBKR' | 'ETORO' | string`); adding a broker must not require a frontend change.
 
