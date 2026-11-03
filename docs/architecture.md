@@ -26,6 +26,6 @@
 5. **Persistence** — store signals, orders, fills, positions snapshots and errors, each tagged with `broker` and `account_id` (internal alias).
 6. **Frontend** — reads everything from the backend REST API ([api-contract.md](api-contract.md)); never talks to a broker or the AI model directly.
 
-## Database tables (suggested)
+## Database
 
-`broker_accounts`, `signals`, `orders`, `fills`, `positions_snapshots`, `market_data`, `settings`, `logs`, `instrument_mappings`, `ai_providers` (incl. `priority`, `enabled`, `unavailable_until`, `unavailable_reason`), `ai_quota_events` (every quota/rate-limit error with its reset time), `ai_calls` (every AI request: provider, model, tokens, cost, latency, outcome, error).
+Schema and table descriptions: [database.md](database.md).

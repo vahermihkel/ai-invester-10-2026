@@ -18,7 +18,14 @@ Code must work for IBKR, eToro **and any broker added later** without changing c
 - **Per-account data.** Risk limits, daily loss/trade counters, reconnect state and idempotency checks are tracked per account, so each broker keeps its own limits and history when you switch back and forth.
 - **History: own DB is the record, broker is the source of truth.** Live state (balance, positions, open orders) is read from the broker. History (orders, fills, signals, equity over time) is served from our DB, because broker APIs only return short windows (IBKR `reqExecutions`/`reqCompletedOrders` ≈ current day up to ~7 days; no balance history via the TWS API) and don't know our signals/AI reasoning/risk decisions. So:
   - Orders are stored before sending and updated from broker callbacks; fills are stored as they arrive.
-  - Equity/positions are snapshotted periodically (`positions_snapshots`), which is how balance history exists.
-  - A reconciliation/backfill job per adapter compares our DB with the broker's history source and fills gaps (e.g. app was offline): IBKR via the **Flex Web Service** (Flex Queries: trades, cash, daily NAV, up to 365 days per query, end-of-day data); eToro via its trade-history endpoint (verify in current eToro API docs). This is an optional `BrokerClient` capability; brokers without a history source rely on our DB only.
+  - Equity/positions are snapshotted periodically (`account_snapshots` + `position_snapshots`, with `reason` = SCHEDULED / AFTER_FILL / ANALYSIS_RUN / END_OF_DAY, see [database.md](database.md)), which is how balance history exists. Snapshot schedule (intervals configurable, e.g. `app.snapshots.*`, not hardcoded):
+    - every 15 min while the account's market is open;
+    - after every fill;
+    - at the start of each analysis run (the same data goes into the AI prompt);
+    - once after market close — the end-of-day record, reconciled against the broker's daily history (e.g. IBKR Flex daily NAV);
+    - hourly while the market is closed, only if the account holds 24/7 instruments (e.g. crypto).
+  - Retention: keep intraday snapshots ~90 days, then delete all but the `END_OF_DAY` snapshot per day (at most one per account per UTC day).
+  - Snapshots are for history/charts only. Risk checks (e.g. max daily loss) use live values from the broker right before each order, never a snapshot.
+  - A reconciliation/backfill job per adapter compares our DB with the broker's history source and fills gaps (e.g. app was offline; backfilled snapshots get `source = BACKFILL`): IBKR via the **Flex Web Service** (Flex Queries: trades, cash, daily NAV, up to 365 days per query, end-of-day data); eToro via its trade-history endpoint (verify in current eToro API docs). This is an optional `BrokerClient` capability; brokers without a history source rely on our DB only.
 - **Same safety rules for every broker.** Every adapter must implement paper/live separation, reconnect + resync, idempotent ordering and full logging (see [safety.md](safety.md)). A new adapter isn't done until it has these.
 - **Contract tests.** One shared abstract test suite for the `BrokerClient` contract that every adapter (and the in-memory `FakeBrokerClient` used in tests) must pass. Adapter-specific mapping tests use recorded/mocked broker responses, never a real account.

@@ -1,6 +1,6 @@
 # AI Investor
 
-Automated trading app. An AI model (any of several configured providers — free/local or paid, switched automatically) analyses market data and produces buy/sell signals; the backend turns those signals into orders on the user's brokerage account. Supported brokers: **Interactive Brokers (IBKR)** and **eToro**. Several accounts can be configured, but **only one is active at a time** (traded and shown in the UI); switching between them is a single action in the UI header (see `docs/brokers.md`). More brokers and AI providers will be added later, so the code must be broker- and AI-agnostic. Every signal, order and fill is stored in a database so history can be reviewed in the frontend.
+Automated trading app. An AI model (any of several configured providers — free/local or paid, switched automatically) analyses market data and produces buy/sell signals; the backend turns those signals into orders on the user's brokerage account. Supported brokers: **Interactive Brokers (IBKR)**, **eToro** or something else. Several accounts can be configured, but **only one is active at a time** (traded and shown in the UI); switching between them is a single action in the UI header (see `docs/brokers.md`). More brokers and AI providers will be added later, so the code must be broker- and AI-agnostic. Every signal, order and fill is stored in a database so history can be reviewed in the frontend.
 
 **This app moves real money — the safety rules in `docs/safety.md` always apply.**
 
@@ -14,7 +14,7 @@ ai-investor/
 └── CLAUDE.md
 ```
 
-The frontend is set up (see Commands); the backend folder is still empty. Update these files when the stack is chosen and code is added (commands, structure, env vars).
+The frontend is set up (see Commands); the backend has only the database schema so far (`backend/src/main/resources/db/migration/V1__initial_schema.sql`), no Maven project yet. Update these files when the stack is chosen and code is added (commands, structure, env vars).
 
 ## Detailed docs
 
@@ -24,7 +24,8 @@ Each file covers one topic; update the matching file instead of growing this one
 |---|---|
 | `docs/safety.md` | Safety rules |
 | `docs/configuration.md` | `.env` secrets file, switching accounts, single-user / no login, local-only access |
-| `docs/architecture.md` | Tech stack, data flow, database tables |
+| `docs/architecture.md` | Tech stack, data flow |
+| `docs/database.md` | Database schema: what each table stores (source: `backend/src/main/resources/db/migration/`) |
 | `docs/brokers.md` | Multi-broker architecture (IBKR, eToro, future brokers) |
 | `docs/ai-providers.md` | Multi-AI-provider architecture, priority, failover, quota reset handling |
 | `docs/api-contract.md` | REST API endpoints and generic API models |
@@ -34,6 +35,7 @@ Each file covers one topic; update the matching file instead of growing this one
 @docs/safety.md
 @docs/configuration.md
 @docs/architecture.md
+@docs/database.md
 @docs/brokers.md
 @docs/ai-providers.md
 @docs/api-contract.md

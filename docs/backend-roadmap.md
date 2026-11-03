@@ -12,7 +12,8 @@ What the backend must do, and in which order to build it. Tick items off (`[x]`)
 
 ### Broker
 - [ ] **Broker adapters** (IBKR, eToro) behind `BrokerClient` ([brokers.md](brokers.md)), paper/demo first.
-- [ ] **Account summary and positions** — fetch from the active account; store periodic `positions_snapshots` for history.
+- [ ] **Account summary and positions** — fetch from the active account; store `account_snapshots` + `position_snapshots` for history (schedule + retention in [brokers.md](brokers.md)).
+- [ ] **History reconciliation/backfill** — per adapter, fill gaps in orders/fills/daily equity from the broker's history source (IBKR Flex Web Service, eToro trade history).
 - [ ] **Order lifecycle** — track each order SUBMITTED → PARTIALLY_FILLED → FILLED / CANCELLED / REJECTED; record fills, including late ones.
 - [ ] **Instrument mapping** — symbol → broker's own ID, cached in `instrument_mappings`.
 - [ ] **Reconnect + resync** — reconnect with backoff, reload state from the broker; unknown order outcome = "maybe placed", reconcile first.
@@ -29,7 +30,7 @@ What the backend must do, and in which order to build it. Tick items off (`[x]`)
 - [ ] **Kill switch** — `POST /api/trading/stop|start`, persists across restarts and account switches.
 
 ### Platform
-- [ ] **Database schema + Flyway migrations** — tables in [architecture.md](architecture.md).
+- [ ] **Database schema + Flyway migrations** — `V1__initial_schema.sql` written and tested on PostgreSQL 18 ([database.md](database.md)); still needs the Maven project + Flyway wiring and JPA entities.
 - [ ] **Config + secrets** — everything from the root `.env` (template: `.env.example`), bound via `@ConfigurationProperties`; accounts enabled by which `.env` values are filled in ([configuration.md](configuration.md)).
 - [ ] **Startup safety checks** — refuse to start if LIVE/PAPER doesn't match the credentials or port.
 - [ ] **REST API for the frontend** — exactly the shapes in [api-contract.md](api-contract.md) / `frontend/src/types.ts`.

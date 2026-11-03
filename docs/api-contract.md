@@ -16,6 +16,9 @@ Types live in `frontend/src/types.ts`; the backend DTOs must match. Only one bro
 | POST | `/api/trading/start` | resume automated trading |
 | GET | `/api/ai/providers` | `AiProviderStatus[]` — id, type, model, tier (FREE/PAID), enabled, priority, available, unavailableReason, unavailableUntil (quota reset time, UTC), usage today/this month (tokens, requests, cost) vs. budgets. _Planned — not yet in frontend_ |
 | PUT | `/api/ai/providers` | update `enabled` / `priority` / budgets / router strategy (never API keys). _Planned — not yet in frontend_ |
+| GET | `/api/trades?accountId=X&status=OPEN\|CLOSED&limit=N` | `Trade[]` — round trips with entry/exit price, profit, buy/sell reasoning (from `v_trade_history`). _Planned — not yet in frontend_ |
+| GET | `/api/account/history?accountId=X&from=&to=` | `AccountSnapshot[]` — total value, invested, reserved for orders, free cash over time. _Planned — not yet in frontend_ |
+| GET | `/api/orders/{id}/events` | `OrderEvent[]` — status history of one order (submitted, cancelled, …). _Planned — not yet in frontend_ |
 
 Every `Position`, `Signal`, `Order` includes `broker` and `accountId`. Paper/live mode and which brokers/accounts exist are backend config only; the frontend can display them and choose which configured account is active, but never change their mode or credentials.
 
@@ -32,6 +35,9 @@ The same models are used for IBKR, eToro and any future broker. **Never add brok
 - **`SystemStatus`** — `activeAccountId`, `tradingEnabled`, `brokerConnected`, `marketOpen`, `lastRunAt`.
 - **`RiskSettings`** — analysisIntervalMinutes, `accounts: { accountId, limits: RiskLimits }[]` (limits in the account's base currency; the UI edits only the active account's entry and sends the rest back unchanged). `RiskLimits` = maxPositionValue, maxOrderValue, maxDailyLoss, maxTradesPerDay, allowedSymbols.
 - **`Signal`** — will also get `aiProvider` (alias), `aiModel` and `fallbackFrom` (_planned — not yet in frontend_).
+- **`Order`** — will also get `source` (AI/MANUAL), `reasoning`, `submittedAt`, `filledAt`, `cancelledAt`, `rejectedAt`, `closeReason`, `commission` (_planned — not yet in frontend_).
+- **`Trade`** (_planned_) — id, accountId, broker, symbol, assetClass, side (LONG/SHORT), status (OPEN/CLOSED), quantity, entryPrice, exitPrice, realizedPnl, realizedPnlPct, successful, currency, openedAt, closedAt, entryReasoning, exitReasoning.
+- **`AccountSnapshot`** (_planned_) — takenAt, reason, currency, totalValue, investedValue, reservedForOrders, freeCash, cash, unrealizedPnl, dailyPnl.
 - **`AiProviderType`** — open string type like `BrokerType` (`'OPENAI' | 'GEMINI' | 'GROK' | 'CLAUDE' | 'OLLAMA' | 'OPENAI_COMPATIBLE' | string`); the UI never branches on it.
 - **`BrokerType`** — open string type (`'IBKR' | 'ETORO' | string`); adding a broker must not require a frontend change.
 
