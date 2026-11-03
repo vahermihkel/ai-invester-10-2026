@@ -125,7 +125,7 @@ td.reasoning { min-width: 240px; color: var(--muted); }
 .tag { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; background: var(--neutral-bg); }
 .tag.buy, .tag.executed, .tag.filled { background: var(--pos-bg); color: var(--pos); }
 .tag.sell, .tag.rejected, .tag.cancelled { background: var(--neg-bg); color: var(--neg); }
-.tag.pending, .tag.submitted, .tag.partially_filled { background: var(--warn-bg); color: var(--warn-text); }
+.tag.pending, .tag.created, .tag.submitted, .tag.partially_filled, .tag.unknown { background: var(--warn-bg); color: var(--warn-text); }
 
 .settings {
   display: grid;

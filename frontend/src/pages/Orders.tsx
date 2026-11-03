@@ -36,7 +36,7 @@ export function Orders({ account }: PageProps) {
                 <td><span className={`tag ${o.status.toLowerCase()}`}>{o.status}</span></td>
                 <td className="r">{num(o.filledQuantity)}</td>
                 <td className="r">{money(o.avgFillPrice, o.currency)}</td>
-                <td className="r muted">{o.signalId ? `#${o.signalId}` : 'manual'}</td>
+                <td className="r muted">{o.signalId ? `#${o.signalId}` : o.source.toLowerCase()}</td>
               </tr>
             ))}
             {data?.length === 0 && <tr><td colSpan={10} className="muted">No orders yet</td></tr>}

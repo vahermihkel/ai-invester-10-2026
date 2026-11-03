@@ -46,10 +46,12 @@ export function Dashboard({ account }: PageProps) {
           </thead>
           <tbody>
             {positions.data?.map((p) => (
-              <tr key={`${p.symbol}-${p.side}`}>
+              <tr key={`${p.symbol}-${p.exchange}-${p.side}-${p.brokerPositionId ?? ''}`}>
                 <td>
                   <b>{p.symbol}</b>
-                  <div className="muted small">{p.assetClass}{p.leverage ? ` · x${p.leverage}` : ''}</div>
+                  <div className="muted small">
+                    {p.assetClass}{p.exchange ? ` · ${p.exchange}` : ''}{p.leverage ? ` · x${p.leverage}` : ''}
+                  </div>
                 </td>
                 <td><span className={`tag ${p.side === 'LONG' ? 'buy' : 'sell'}`}>{p.side}</span></td>
                 <td className="r">{num(p.quantity)}</td>
