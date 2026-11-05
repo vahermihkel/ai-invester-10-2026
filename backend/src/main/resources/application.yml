@@ -1,0 +1,64 @@
+# Real values live in the root .env (see docs/rules/configuration.md). Only reference variables here.
+spring:
+  application:
+    name: ai-investor
+  config:
+    # ../.env when started from backend/, .env when started from the project root.
+    import: optional:file:.env[.properties],optional:file:../.env[.properties]
+  profiles:
+    default: paper
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  mvc:
+    problemdetails:
+      # Errors we raise on purpose carry a readable "detail"; unexpected ones reveal nothing.
+      enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema. Never use update/create: startup fails if an entity and the schema disagree.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+server:
+  # No login, so the API must only be reachable from this machine. Never 0.0.0.0.
+  address: 127.0.0.1
+  port: 8080
+
+app:
+  trading:
+    active-account: ${ACTIVE_ACCOUNT:}
+    allow-live-trading: ${ALLOW_LIVE_TRADING:false}
+  brokers:
+    # The known accounts. required-env lists variable names only, values stay in .env.
+    accounts:
+      - alias: ibkr-paper
+        broker-type: IBKR
+        display-name: IBKR paper
+        trading-mode: PAPER
+        base-currency: USD
+        required-env: [IBKR_PAPER_HOST, IBKR_PAPER_PORT, IBKR_PAPER_CLIENT_ID, IBKR_PAPER_ACCOUNT_ID]
+      - alias: ibkr-live
+        broker-type: IBKR
+        display-name: IBKR live
+        trading-mode: LIVE
+        base-currency: USD
+        required-env: [IBKR_LIVE_HOST, IBKR_LIVE_PORT, IBKR_LIVE_CLIENT_ID, IBKR_LIVE_ACCOUNT_ID]
+      - alias: etoro-demo
+        broker-type: ETORO
+        display-name: eToro demo
+        trading-mode: PAPER
+        base-currency: USD
+        required-env: [ETORO_DEMO_API_KEY, ETORO_DEMO_USER_KEY]
+      - alias: etoro-real
+        broker-type: ETORO
+        display-name: eToro real
+        trading-mode: LIVE
+        base-currency: USD
+        required-env: [ETORO_REAL_API_KEY, ETORO_REAL_USER_KEY]
+  # AI providers go under app.ai.providers once their models and priority order are decided.

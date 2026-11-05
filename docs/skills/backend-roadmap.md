@@ -5,20 +5,21 @@ What the backend must do, and in which order to build it. Tick items off (`[x]`)
 ## Features
 
 ### AI
-- [ ] **Prompt building** — send the AI market data plus context: current positions, cash, risk limits, recent signals. Same prompt template for every provider ([ai-providers.md](ai-providers.md)).
-- [ ] **AI provider adapters + `AiRouter`** — priority order, automatic switch to the next model on quota/technical errors, quota reset time stored in DB, usage/budget tracking.
+- [ ] **Prompt building** — send the AI market data plus context: current positions, cash, risk limits, recent signals. Same prompt template for every provider ([ai-providers.md](../rules/ai-providers.md)).
+- [ ] **AI provider adapters + `AiRouter`** — priority order, automatic switch to the next model on quota/technical errors, quota reset time stored in DB, usage/budget tracking. Includes the startup sync of `app.ai.providers`: refuse a changed `type` on an existing alias, and clear availability on a model change ([ai-providers.md](../rules/ai-providers.md)).
 - [ ] **Strict response validation** — parse into the signal schema; anything malformed or ambiguous = HOLD.
 - [ ] **Persist AI communication** — every call in `ai_calls` (provider, model, tokens, cost, latency, outcome), raw response + parsed signal in `signals`.
 
 ### Broker
-- [ ] **Broker adapters** (IBKR, eToro) behind `BrokerClient` ([brokers.md](brokers.md)), paper/demo first.
-- [ ] **Account summary and positions** — fetch from the active account; store `account_snapshots` + `position_snapshots` for history (schedule + retention in [brokers.md](brokers.md)).
+- [ ] **Broker adapters** (IBKR, eToro) behind `BrokerClient` ([brokers.md](../rules/brokers.md)), paper/demo first.
+- [ ] **Account summary and positions** — fetch from the active account; store `account_snapshots` + `position_snapshots` for history (schedule + retention in [brokers.md](../rules/brokers.md)).
 - [ ] **History reconciliation/backfill** — per adapter, fill gaps in orders/fills/daily equity from the broker's history source (IBKR Flex Web Service, eToro trade history).
 - [ ] **Order lifecycle** — track each order SUBMITTED → PARTIALLY_FILLED → FILLED / CANCELLED / REJECTED; record fills, including late ones.
 - [ ] **External activity** — store orders we didn't send (`source = EXTERNAL`: broker's own app, stop-outs, liquidations) and money movements in `cash_transactions` (deposits, dividends, fees).
 - [ ] **Instrument mapping** — symbol → broker's own ID and trading rules, cached in `instrument_mappings`.
 - [ ] **Reconnect + resync** — reconnect with backoff, reload state from the broker; unknown order outcome = "maybe placed", reconcile first.
-- [ ] **Active account switching** — `ActiveAccountService`, `PUT /api/accounts/active`, rules in [brokers.md](brokers.md).
+- [x] **Active account switching** — `ActiveAccountService`, `PUT /api/accounts/active`, rules in [brokers.md](../rules/brokers.md).
+- [ ] **Retiring accounts** — done: an account removed from the config or with empty `.env` values is disabled, keeps its history, and an alias can't change broker or trading mode. Not done: startup warning + audit entry when a disabled account still has open orders in our DB ([brokers.md](../rules/brokers.md)).
 
 ### Trading
 - [ ] **Market data** — prices/history from the broker or a free source behind `MarketDataProvider`.
@@ -28,15 +29,15 @@ What the backend must do, and in which order to build it. Tick items off (`[x]`)
 - [ ] **Automated trading** — scheduler runs analysis → risk check → execution.
 - [ ] **Manual trading** — endpoint to place/cancel orders by hand (needs adding to [api-contract.md](api-contract.md)). Manual orders also pass the risk engine.
 - [ ] **Scheduler + market hours** — `@Scheduled` runs, market hours and holidays per instrument; no orders while the market is closed.
-- [ ] **Kill switch** — `POST /api/trading/stop|start`, persists across restarts and account switches.
+- [x] **Kill switch** — `POST /api/trading/stop|start`, persists across restarts and account switches. Execution must check it right before every order once execution is built.
 
 ### Platform
-- [ ] **Database schema + Flyway migrations** — `V1__initial_schema.sql` written and tested on PostgreSQL 18 ([database.md](database.md)); still needs the Maven project + Flyway wiring and JPA entities.
-- [ ] **Config + secrets** — everything from the root `.env` (template: `.env.example`), bound via `@ConfigurationProperties`; accounts enabled by which `.env` values are filled in ([configuration.md](configuration.md)).
-- [ ] **Startup safety checks** — refuse to start if LIVE/PAPER doesn't match the credentials or port.
-- [ ] **REST API for the frontend** — exactly the shapes in [api-contract.md](api-contract.md) / `frontend/src/types.ts`.
-- [ ] **Settings storage** — risk limits and AI provider order/enabled in DB, changeable at runtime.
-- [ ] **Local-only access (no login)** — single-user app, no login/logout. Bind the backend to `127.0.0.1`, CORS only for the local frontend ([configuration.md](configuration.md)).
+- [ ] **Database schema + Flyway migrations** — `V1__initial_schema.sql` and Flyway wiring done, with Hibernate validating entities at startup ([database.md](database.md)). JPA entities exist for `app_settings`, `broker_accounts`, `active_account_changes`, `risk_limits`, `signals`, `orders` and `audit_log`; the rest are added with the features that use them.
+- [ ] **Config + secrets** — everything from the root `.env` (template: `.env.example`), bound via `@ConfigurationProperties`; accounts enabled by which `.env` values are filled in ([configuration.md](../rules/configuration.md)). Done for the database and broker accounts. Not done: AI provider keys.
+- [ ] **Startup safety checks** — refuse to start if LIVE/PAPER doesn't match the credentials or port. Done so far: no LIVE account active without `ALLOW_LIVE_TRADING=true`, and an alias can't change broker or trading mode. Checking credentials and ports needs the adapters.
+- [ ] **REST API for the frontend** — exactly the shapes in [api-contract.md](api-contract.md) / `frontend/src/types.ts`. Done: status (broker fields fixed to false until adapters exist), accounts, active account, kill switch, settings, signals, orders. Still 501 placeholders: account summary and positions (need adapters), account history, cash transactions, trades, order events and fills, AI providers.
+- [ ] **Settings storage** — risk limits and AI provider order/enabled in DB, changeable at runtime. Risk limits done; new accounts start with zero limits and no allowed symbols, so nothing can trade until they are set.
+- [x] **Local-only access (no login)** — single-user app, no login/logout. Bind the backend to `127.0.0.1`, CORS only for the local frontend ([configuration.md](../rules/configuration.md)).
 - [ ] **Alerts** — notify (e.g. email or Telegram) on broker disconnect, all AI providers down, daily loss limit hit, order rejected.
 - [ ] **Audit log + health check** — every decision logged with UTC timestamps; health endpoint for broker, AI and DB status.
 - [ ] **AI performance tracking** — compare signals with what the price did afterwards, per provider/model.

@@ -32,7 +32,7 @@ Adding a broker must never need a migration:
 | `ai_calls` | Every AI request incl. failed ones: provider, model, attempt number (fallback order), outcome, tokens, cost, latency, prompt, raw response. |
 | `v_ai_provider_status` (view) | Models in priority order with `available` (now) and `available_again_at`. |
 
-A provider is available when `enabled AND (unavailable_until IS NULL OR unavailable_until <= now())`. On a quota error the router sets `unavailable_until` and inserts an `ai_quota_events` row in the same transaction (see [ai-providers.md](ai-providers.md)).
+A provider is available when `enabled AND (unavailable_until IS NULL OR unavailable_until <= now())`. On a quota error the router sets `unavailable_until` and inserts an `ai_quota_events` row in the same transaction (see [ai-providers.md](../rules/ai-providers.md)).
 
 ## Trading
 
@@ -54,7 +54,7 @@ LONG trade = buy then sell; SHORT trade = sell then buy back. Only one OPEN trad
 
 | Table | Purpose |
 |---|---|
-| `account_snapshots` | Account money over time, taken on a schedule and after every fill: **`total_value`** (all money in the broker), **`invested_value`** (positions' market value), **`reserved_for_orders`** (money under open bids), **`free_cash`** (available), `cash`, unrealized/realized/daily P&L. `reason` (SCHEDULED / AFTER_FILL / ANALYSIS_RUN / END_OF_DAY / MANUAL) and `source` (LIVE / BACKFILL); at most one END_OF_DAY per account per UTC day. Schedule and retention: [brokers.md](brokers.md). |
+| `account_snapshots` | Account money over time, taken on a schedule and after every fill: **`total_value`** (all money in the broker), **`invested_value`** (positions' market value), **`reserved_for_orders`** (money under open bids), **`free_cash`** (available), `cash`, unrealized/realized/daily P&L. `reason` (SCHEDULED / AFTER_FILL / ANALYSIS_RUN / END_OF_DAY / MANUAL) and `source` (LIVE / BACKFILL); at most one END_OF_DAY per account per UTC day. Schedule and retention: [brokers.md](../rules/brokers.md). |
 | `position_snapshots` | Positions belonging to each account snapshot, linked to `instrument_mappings`, with `broker_position_id` where the broker has one. |
 | `cash_transactions` | Money moving other than through fills: deposits, withdrawals, dividends, interest, fees, financing, tax, FX. Signed `amount` (positive = in), `source` (LIVE / BACKFILL), unique per account + broker transaction ID. Lets the balance chart tell a deposit from profit. |
 

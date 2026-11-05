@@ -10,11 +10,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`${res.status} ${res.statusText}${text ? `: ${text}` : ''}`);
-  }
+  if (!res.ok) throw new Error(await errorMessage(res));
   return res.status === 204 ? (undefined as T) : res.json();
+}
+
+/** The backend explains errors in a JSON "detail" field; anything else is shown as it came. */
+async function errorMessage(res: Response): Promise<string> {
+  const text = await res.text().catch(() => '');
+  try {
+    const detail = JSON.parse(text).detail;
+    if (detail) return detail;
+  } catch {
+    // Not JSON, e.g. a proxy error page when the backend isn't running.
+  }
+  return `${res.status} ${res.statusText}${text ? `: ${text}` : ''}`;
 }
 
 const q = (accountId: string) => encodeURIComponent(accountId);
