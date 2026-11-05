@@ -28,4 +28,5 @@ Because the API has no login and controls real money, access is limited to the l
 
 - Backend binds to `127.0.0.1` only (`server.address=127.0.0.1`), never `0.0.0.0`.
 - CORS allows only the local frontend (`http://localhost:5173` in dev); no wildcard origins.
+- The backend answers only when the `Host` header is `localhost` or `127.0.0.1` (any port), and returns 403 otherwise. Binding and CORS don't stop DNS rebinding: a website can point its own domain at `127.0.0.1`, and the browser then treats the API as that site's own origin, so CORS never applies.
 - Never expose the backend port to the network or internet (no port forwarding, no public hosting) without first adding authentication — note this in the README if the app is shared.
